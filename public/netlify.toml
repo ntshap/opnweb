@@ -1,6 +1,14 @@
 # This file is copied to the output directory during build
 # It ensures proper routing for a Next.js app on Netlify
 
+# Redirect dashboard paths to login if not authenticated
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/login"
+  status = 302
+  force = false
+  conditions = {Role = ["anonymous"]}
+
 # Handle client-side routing
 [[redirects]]
   from = "/*"

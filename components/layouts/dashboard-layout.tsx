@@ -59,8 +59,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setIsClient(true)
 
-    // Check if user is authenticated
-    const token = localStorage.getItem("token")
+    // Check if user is authenticated (from localStorage or cookies)
+    const token = localStorage.getItem("token") ||
+                 document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+
     if (!token) {
       // User is not authenticated, redirect to login
       router.push("/login")
@@ -99,6 +101,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
 
+      // Also clear cookies
+      document.cookie = "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "refreshToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
       toast({
         title: "Berhasil keluar",
         description: "Anda telah keluar dari akun Anda.",
@@ -110,6 +116,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       // Even if there's an error, clear tokens and redirect
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
+
+      // Also clear cookies
+      document.cookie = "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie = "refreshToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
       toast({
         title: "Keluar",

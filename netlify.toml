@@ -13,3 +13,11 @@
 
 [functions]
   node_bundler = "esbuild"
+
+# Redirect to login if not authenticated
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/login"
+  status = 302
+  force = false
+  conditions = {Role = ["anonymous"]}

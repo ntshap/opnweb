@@ -41,9 +41,16 @@ export default function LoginPage() {
 
       // Store the token
       if (response && response.token) {
+        // Store in localStorage for client-side access
         localStorage.setItem("token", response.token)
         if (response.refreshToken) {
           localStorage.setItem("refreshToken", response.refreshToken)
+        }
+
+        // Store in cookies for middleware
+        document.cookie = `token=${response.token};path=/;max-age=2592000;SameSite=Strict` // 30 days
+        if (response.refreshToken) {
+          document.cookie = `refreshToken=${response.refreshToken};path=/;max-age=2592000;SameSite=Strict` // 30 days
         }
 
         // Redirect to dashboard

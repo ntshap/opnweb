@@ -9,7 +9,8 @@ export default function Home() {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token") ||
+                 document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1")
 
     if (token) {
       // User is authenticated, redirect to dashboard

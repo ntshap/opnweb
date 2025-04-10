@@ -11,18 +11,23 @@ console.log('API Configuration:', {
 // Token management
 const getAuthToken = () => {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem("token")
+  return localStorage.getItem("token") || document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1")
 }
 
 const setAuthToken = (token: string) => {
   if (typeof window === 'undefined') return
   localStorage.setItem("token", token)
+  // Also set as cookie for middleware
+  document.cookie = `token=${token};path=/;max-age=2592000;SameSite=Strict` // 30 days
 }
 
 const removeAuthToken = () => {
   if (typeof window === 'undefined') return
   localStorage.removeItem("token")
   localStorage.removeItem("refreshToken")
+  // Also remove from cookies
+  document.cookie = "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT"
+  document.cookie = "refreshToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT"
 }
 
 // Create Axios instance with base configuration
