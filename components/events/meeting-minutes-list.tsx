@@ -45,7 +45,7 @@ export function MeetingMinutesList({ eventId }: MeetingMinutesListProps) {
         // Handle empty document URL
         document_url: data.document_url || undefined,
         // Ensure description is a string
-        description: data.description || ''
+        description: data.description
       }
 
       // Log the data being sent to the API for debugging

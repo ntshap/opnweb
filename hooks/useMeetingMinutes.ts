@@ -138,26 +138,15 @@ export function useMeetingMinutesItem(id: number | string) {
         // But just in case, we'll handle it here too
         console.error(`Unexpected error in useMeetingMinutesItem(${id}):`, error);
 
-        // Create a default fallback object
-        const fallbackData = {
-          id: Number(id),
-          title: 'Error Tidak Terduga',
-          description: 'Terjadi kesalahan yang tidak terduga saat memuat data notulensi. Silakan coba lagi nanti.',
-          date: new Date().toISOString().split('T')[0],
-          document_url: '',
-          event_id: Number(id),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
         // Show toast notification
         toast({
           title: "Terjadi kesalahan",
-          description: "Tidak dapat memuat data notulensi. Menggunakan data cadangan.",
+          description: "Tidak dapat memuat data notulensi.",
           variant: "destructive",
         });
 
-        return fallbackData;
+        // Rethrow the error to be handled by the component
+        throw error;
       }
     },
     enabled: !!id,

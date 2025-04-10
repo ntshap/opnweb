@@ -6,7 +6,7 @@
   NETLIFY = "true"
   NODE_VERSION = "20"
   NEXT_PUBLIC_API_URL = "https://backend-project-pemuda.onrender.com/api/v1"
-  NEXT_PUBLIC_USE_FALLBACK_DATA = "true"
+  NEXT_PUBLIC_USE_FALLBACK_DATA = "false"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

@@ -37,7 +37,7 @@ export function MeetingMinutesForm({ defaultValues, eventId, onSubmit, isSubmitt
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: defaultValues?.title || "",
-      description: defaultValues?.description || "",
+      description: defaultValues?.description || "", // Provide empty string as default
       date: defaultValues?.date ? new Date(defaultValues.date) : new Date(),
       document_url: defaultValues?.document_url || "",
       event_id: eventId,

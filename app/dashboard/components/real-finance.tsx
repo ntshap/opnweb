@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { DollarSign } from "lucide-react"
 import { StatCard } from "@/components/dashboard/stat-card"
-import { financeApi, USE_FALLBACK_DATA } from "@/lib/api"
+import { financeApi } from "@/lib/api"
 import { apiClient } from "@/lib/api-client"
 import axios from "axios"
 
@@ -19,7 +19,7 @@ export function RealFinance() {
     const fetchFinanceSummary = async () => {
       try {
         setIsLoading(true)
-        console.log('Fetching finance summary, USE_FALLBACK_DATA:', USE_FALLBACK_DATA)
+        console.log('Fetching finance summary')
 
         // Use our API client instead of direct axios calls
         const summary = await financeApi.getFinanceSummary()
@@ -33,24 +33,12 @@ export function RealFinance() {
       } catch (error) {
         console.error('Error fetching finance summary:', error)
 
-        // Only use fallback data if explicitly enabled
-        if (USE_FALLBACK_DATA) {
-          const fallbackSummary = {
-            total_income: "20000",
-            total_expense: "5000",
-            current_balance: "15000"
-          }
-
-          setFinanceSummary(fallbackSummary)
-          console.log('Using fallback finance summary due to error:', fallbackSummary)
-        } else {
-          // Show real error state in the UI
-          setFinanceSummary({
-            total_income: "0",
-            total_expense: "0",
-            current_balance: "0"
-          })
-        }
+        // Show real error state in the UI
+        setFinanceSummary({
+          total_income: "0",
+          total_expense: "0",
+          current_balance: "0"
+        })
       } finally {
         setIsLoading(false)
       }

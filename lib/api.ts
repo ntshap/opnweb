@@ -1,46 +1,34 @@
 import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios"
 import { API_CONFIG } from './config'
-import { mockMeetingMinutesApi } from './mock/meeting-minutes'
-
-// Flag to enable fallback data when API is unavailable
-export const USE_FALLBACK_DATA = process.env.NEXT_PUBLIC_USE_FALLBACK_DATA === 'true' ? true : false
 
 // Log API configuration on startup
 console.log('API Configuration:', {
   API_BASE_URL: API_CONFIG?.BASE_URL || 'API_CONFIG not loaded',
-  USE_FALLBACK_DATA,
   MAX_RETRIES: API_CONFIG?.RETRY?.ATTEMPTS || 3,
   RETRY_DELAY: API_CONFIG?.RETRY?.DELAY || 1000
 })
 
-// Flag to track if we're using the mock API due to network issues
-let usingMockApi = false
-
-// Function to check if we're using the mock API
-export const isUsingMockApi = () => usingMockApi
-
 // Token management
 const getAuthToken = () => {
   if (typeof window === 'undefined') return null
-  return window.localStorage.getItem('token')
+  return localStorage.getItem("token")
 }
 
 const setAuthToken = (token: string) => {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem('token', token)
+  localStorage.setItem("token", token)
 }
 
 const removeAuthToken = () => {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem('token')
-  window.localStorage.removeItem('refreshToken')
-  window.localStorage.removeItem('user') // Explicitly remove any user data
+  localStorage.removeItem("token")
+  localStorage.removeItem("refreshToken")
 }
 
 // Create Axios instance with base configuration
 const apiClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT.DEFAULT, // Meningkatkan timeout dari 5 detik menjadi 15 detik
+  timeout: API_CONFIG.TIMEOUT.DEFAULT,
   headers: {
     "Content-Type": "application/json",
   },
@@ -150,266 +138,25 @@ async function withRetry<T>(
   }
 }
 
-// Fallback data for when API is unavailable
-const fallbackEvents: Event[] = [
-  {
-    id: 1,
-    title: "Rapat Anggota Tahunan",
-    description: "Rapat tahunan untuk membahas perkembangan organisasi",
-    date: "2025-04-15",
-    time: "09:00",
-    location: "Aula Utama",
-    status: "akan datang",
-    created_at: "2025-03-01T00:00:00Z",
-    updated_at: "2025-03-01T00:00:00Z",
-    photos: [],
-    attendees: []
-  },
-  {
-    id: 2,
-    title: "Workshop Pengembangan Diri",
-    description: "Workshop untuk meningkatkan soft skill anggota",
-    date: "2025-04-20",
-    time: "13:00",
-    location: "Ruang Pelatihan",
-    status: "akan datang",
-    created_at: "2025-03-05T00:00:00Z",
-    updated_at: "2025-03-05T00:00:00Z",
-    photos: [],
-    attendees: []
-  },
-  {
-    id: 3,
-    title: "Bakti Sosial",
-    description: "Kegiatan bakti sosial di panti asuhan",
-    date: "2025-03-10",
-    time: "08:00",
-    location: "Panti Asuhan Harapan",
-    status: "selesai",
-    created_at: "2025-02-15T00:00:00Z",
-    updated_at: "2025-03-11T00:00:00Z",
-    photos: [
-      { id: 1, event_id: 3, photo_url: "https://source.unsplash.com/random/800x600/?charity", uploaded_at: "2025-03-11T00:00:00Z" },
-      { id: 2, event_id: 3, photo_url: "https://source.unsplash.com/random/800x600/?volunteer", uploaded_at: "2025-03-11T00:00:00Z" }
-    ],
-    attendees: []
-  },
-  {
-    id: 4,
-    title: "Seminar Kepemimpinan",
-    description: "Seminar tentang kepemimpinan efektif",
-    date: "2025-03-05",
-    time: "10:00",
-    location: "Auditorium",
-    status: "selesai",
-    created_at: "2025-02-20T00:00:00Z",
-    updated_at: "2025-03-06T00:00:00Z",
-    photos: [
-      { id: 3, event_id: 4, photo_url: "https://source.unsplash.com/random/800x600/?seminar", uploaded_at: "2025-03-06T00:00:00Z" }
-    ],
-    attendees: []
-  },
-  {
-    id: 5,
-    title: "Pelatihan Digital Marketing",
-    description: "Pelatihan tentang strategi pemasaran digital",
-    date: "2025-05-10",
-    time: "14:00",
-    location: "Ruang Komputer",
-    status: "akan datang",
-    created_at: "2025-03-15T00:00:00Z",
-    updated_at: "2025-03-15T00:00:00Z",
-    photos: [],
-    attendees: []
-  },
-  {
-    id: 6,
-    title: "Diskusi Panel Ekonomi",
-    description: "Diskusi tentang perkembangan ekonomi terkini",
-    date: "2025-05-20",
-    time: "15:30",
-    location: "Ruang Seminar",
-    status: "akan datang",
-    created_at: "2025-03-20T00:00:00Z",
-    updated_at: "2025-03-20T00:00:00Z",
-    photos: [],
-    attendees: []
-  },
-  {
-    id: 7,
-    title: "Lomba Karya Tulis",
-    description: "Kompetisi karya tulis ilmiah",
-    date: "2025-02-25",
-    time: "09:00",
-    location: "Aula Serbaguna",
-    status: "selesai",
-    created_at: "2025-01-10T00:00:00Z",
-    updated_at: "2025-02-26T00:00:00Z",
-    photos: [
-      { id: 4, event_id: 7, photo_url: "https://source.unsplash.com/random/800x600/?writing", uploaded_at: "2025-02-26T00:00:00Z" },
-      { id: 5, event_id: 7, photo_url: "https://source.unsplash.com/random/800x600/?competition", uploaded_at: "2025-02-26T00:00:00Z" }
-    ],
-    attendees: []
-  },
-  {
-    id: 8,
-    title: "Webinar Teknologi",
-    description: "Webinar tentang perkembangan teknologi terbaru",
-    date: "2025-06-05",
-    time: "19:00",
-    location: "Online (Zoom)",
-    status: "akan datang",
-    created_at: "2025-04-01T00:00:00Z",
-    updated_at: "2025-04-01T00:00:00Z",
-    photos: [],
-    attendees: []
-  },
-  {
-    id: 9,
-    title: "Perayaan Hari Kemerdekaan",
-    description: "Acara perayaan hari kemerdekaan Indonesia",
-    date: "2025-08-17",
-    time: "08:00",
-    location: "Lapangan Utama",
-    status: "akan datang",
-    created_at: "2025-07-01T00:00:00Z",
-    updated_at: "2025-07-01T00:00:00Z",
-    photos: [],
-    attendees: []
-  }
-];
-
-const fallbackFinanceSummary = {
-  total_income: 15000000,
-  total_expense: 5000000,
-  net_change: 10000000,
-  current_balance: 10000000
-};
-
-const fallbackFinanceHistory = {
-  transactions: [
-    {
-      id: 1,
-      amount: "5000000",
-      category: "Pengeluaran",
-      date: "2023-04-02T00:00:00Z",
-      description: "Biaya kegiatan",
-      balance_before: "15000000",
-      balance_after: "10000000",
-      document_url: null,
-      created_by: 1,
-      created_at: "2023-04-02T00:00:00Z",
-      updated_at: "2023-04-02T00:00:00Z"
-    },
-    {
-      id: 2,
-      amount: "20000000",
-      category: "Pemasukan",
-      date: "2023-04-02T00:00:00Z",
-      description: "Iuran anggota",
-      balance_before: "0",
-      balance_after: "15000000",
-      document_url: null,
-      created_by: 1,
-      created_at: "2023-04-02T00:00:00Z",
-      updated_at: "2023-04-02T00:00:00Z"
-    }
-  ],
-  current_balance: "10000000"
-};
-
-const fallbackMembers: MemberResponse = {
-  "Pengurus Inti": [
-    { id: 1, full_name: "Budi Santoso", division: "Pengurus Inti", position: "Ketua" },
-    { id: 2, full_name: "Siti Rahayu", division: "Pengurus Inti", position: "Sekretaris" },
-    { id: 3, full_name: "Agus Wijaya", division: "Pengurus Inti", position: "Bendahara" }
-  ],
-  "Divisi Pendidikan": [
-    { id: 4, full_name: "Dewi Lestari", division: "Divisi Pendidikan", position: "Koordinator" },
-    { id: 5, full_name: "Rudi Hartono", division: "Divisi Pendidikan", position: "Anggota" }
-  ],
-  "Divisi Sosial": [
-    { id: 6, full_name: "Rina Wati", division: "Divisi Sosial", position: "Koordinator" },
-    { id: 7, full_name: "Joko Susilo", division: "Divisi Sosial", position: "Anggota" }
-  ]
-};
-
-// Unused but kept for reference
-// const fallbackNews: NewsItem[] = [];
-
 // API service for events
 export const eventApi = {
   // Get events with pagination
   getEvents: async (page = 1, limit = 10, signal?: AbortSignal): Promise<Event[]> => {
-    // Immediately return fallback data if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback events data immediately')
-      // Sort fallback events by newest date first
-      const sortedEvents = [...fallbackEvents].sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-
-      // Simulate pagination
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      return sortedEvents.slice(startIndex, endIndex)
-    }
-
     try {
-      const skip = (page - 1) * limit
-      console.log('Fetching events with params:', { skip, limit })
-
-      const token = getAuthToken()
-      console.log('Using auth token:', token ? 'Token exists' : 'No token')
-
       const response = await withRetry(() =>
-        apiClient.get<Event[]>("/events", {
-          params: { skip, limit },
+        apiClient.get<Event[]>("/events/", {
+          params: { skip: (page - 1) * limit, limit },
           signal,
         })
       )
-
-      console.log('Events API response:', response.data)
-      return response.data || []
+      return response.data
     } catch (error) {
       // Handle canceled requests gracefully
       if (axios.isCancel(error)) {
         console.log('Events request was cancelled - returning empty array')
         return [] // Return empty array instead of throwing error
       }
-
-      // For other errors, log detailed information
       console.error('Error fetching events:', error)
-
-      if (error && typeof error === 'object' && 'isAxiosError' in error) {
-        const axiosError = error as AxiosError
-        console.error('Axios error details:', {
-          status: axiosError.response?.status,
-          statusText: axiosError.response?.statusText,
-          data: axiosError.response?.data,
-          config: {
-            url: axiosError.config?.url,
-            method: axiosError.config?.method,
-            headers: axiosError.config?.headers,
-          }
-        })
-      }
-
-      // Only use fallback data if explicitly enabled
-      if (USE_FALLBACK_DATA) {
-        console.log('Using fallback events data due to API error')
-
-        // Sort fallback events by newest date first
-        const sortedEvents = [...fallbackEvents].sort((a, b) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime()
-        })
-
-        const startIndex = (page - 1) * limit
-        const endIndex = startIndex + limit
-        return sortedEvents.slice(startIndex, endIndex)
-      }
-
-      // Otherwise, throw the error to be handled by the UI
       throw error
     }
   },
@@ -425,32 +172,6 @@ export const eventApi = {
     },
     signal?: AbortSignal,
   ): Promise<Event[]> => {
-    // Immediately return filtered fallback data if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback events data for search immediately')
-      // Filter fallback events based on search params
-      const filteredEvents = fallbackEvents.filter(event => {
-        if (params.title && !event.title.toLowerCase().includes(params.title.toLowerCase())) {
-          return false
-        }
-        if (params.description && !event.description.toLowerCase().includes(params.description.toLowerCase())) {
-          return false
-        }
-        if (params.date && event.date !== params.date) {
-          return false
-        }
-        if (params.location && !event.location.toLowerCase().includes(params.location.toLowerCase())) {
-          return false
-        }
-        return true
-      })
-
-      // Sort filtered events by newest date first
-      return filteredEvents.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-    }
-
     try {
       const cleanParams = Object.fromEntries(
         Object.entries(params).filter(([_, value]) => value !== undefined && value !== '')
@@ -479,59 +200,16 @@ export const eventApi = {
 
   // Get single event
   getEvent: async (id: number | string, signal?: AbortSignal): Promise<Event> => {
-    // Immediately return fallback data if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback event data immediately')
-      const fallbackEvent = fallbackEvents.find(event => event.id === Number(id))
-      if (fallbackEvent) {
-        return fallbackEvent
-      }
-
-      // If no matching fallback event, return a default event
-      return {
-        id: Number(id),
-        title: 'Acara tidak ditemukan',
-        description: 'Detail acara tidak tersedia',
-        date: new Date().toISOString().split('T')[0],
-        time: '00:00',
-        location: 'Lokasi tidak tersedia',
-        status: 'akan datang',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        photos: [],
-        attendees: []
-      }
-    }
-
     try {
       const response = await withRetry(() =>
         apiClient.get<Event>(`/events/${id}`, { signal })
       )
-
-      // Ensure photos array exists
-      if (!response.data.photos) {
-        response.data.photos = []
-      }
-
       return response.data
     } catch (error) {
       // Handle canceled requests gracefully
       if (axios.isCancel(error)) {
-        console.log('Event request was cancelled - returning default event object')
-        // Return a default event object to prevent UI errors
-        return {
-          id: Number(id),
-          title: 'Permintaan dibatalkan',
-          description: 'Detail acara tidak dapat dimuat',
-          date: new Date().toISOString().split('T')[0],
-          time: '00:00',
-          location: '',
-          status: 'akan datang',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          photos: [],
-          attendees: []
-        }
+        console.log('Event request was cancelled')
+        throw new Error('Request was cancelled')
       }
       console.error('Error fetching event:', error)
       throw error
@@ -539,234 +217,105 @@ export const eventApi = {
   },
 
   // Create event
-  createEvent: async (data: EventFormData): Promise<Event> => {
-    // Format the data before sending it to the API
-    const formattedData = formatEventData(data, true) // true indicates this is a create operation
-
-    console.log('Creating event with formatted data:', formattedData)
-
-    const response = await withRetry(() =>
-      apiClient.post<Event>("/events", formattedData)
-    )
-    return response.data
+  createEvent: async (eventData: EventFormData): Promise<Event> => {
+    try {
+      const response = await withRetry(() =>
+        apiClient.post<Event>("/events/", eventData)
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error creating event:', error)
+      throw error
+    }
   },
 
   // Update event
-  updateEvent: async (id: number | string, data: Partial<EventFormData>): Promise<Event> => {
-    // Format the data before sending it to the API
-    const formattedData = formatEventData(data, false) // false indicates this is an update operation
-
-    console.log('Updating event with formatted data:', formattedData)
-
+  updateEvent: async (id: number | string, eventData: EventFormData): Promise<Event> => {
     try {
       const response = await withRetry(() =>
-        apiClient.put<Event>(`/events/${id}`, formattedData)
+        apiClient.put<Event>(`/events/${id}`, eventData)
       )
       return response.data
     } catch (error) {
       console.error('Error updating event:', error)
-
-      // Log detailed error information
-      if (error && typeof error === 'object' && 'isAxiosError' in error) {
-        const axiosError = error as AxiosError
-        console.error('Axios error details:', {
-          status: axiosError.response?.status,
-          statusText: axiosError.response?.statusText,
-          data: axiosError.response?.data,
-          config: {
-            url: axiosError.config?.url,
-            method: axiosError.config?.method,
-            data: axiosError.config?.data,
-          }
-        })
-      }
-
       throw error
     }
   },
 
   // Delete event
   deleteEvent: async (id: number | string): Promise<void> => {
-    await withRetry(() => apiClient.delete(`/events/${id}`))
+    try {
+      await withRetry(() =>
+        apiClient.delete(`/events/${id}`)
+      )
+    } catch (error) {
+      console.error('Error deleting event:', error)
+      throw error
+    }
   },
 
   // Get event attendance
-  getEventAttendance: async (eventId: number | string, signal?: AbortSignal): Promise<Attendee[]> => {
+  getEventAttendance: async (eventId: number | string, signal?: AbortSignal): Promise<EventAttendance[]> => {
     try {
-      const response = await withRetry(() => apiClient.get<Attendee[]>(`/events/${eventId}/attendance`, { signal }))
-      return response.data || []
+      const response = await withRetry(() =>
+        apiClient.get<EventAttendance[]>(`/events/${eventId}/attendance`, { signal })
+      )
+      return response.data
     } catch (error) {
-      // Check if the request was canceled
+      // Handle canceled requests gracefully
       if (axios.isCancel(error)) {
-        console.log('Event attendance request was cancelled')
-        return [] // Return empty array to prevent UI errors
+        console.log('Attendance request was cancelled - returning empty array')
+        return [] // Return empty array instead of throwing error
       }
-      console.error('Error fetching event attendance:', error)
+      console.error('Error fetching attendance:', error)
       throw error
     }
   },
 
-  // Update attendance
-  updateAttendance: async (
-    eventId: number | string,
-    memberId: number,
-    data: { status: string; notes: string },
-  ): Promise<Attendee> => {
-    const response = await withRetry(() => apiClient.put<Attendee>(`/events/${eventId}/attendance/${memberId}`, data))
-    return response.data
-  },
-
-  // Create or update multiple attendance records
-  createOrUpdateAttendance: async (
-    eventId: number | string,
-    attendanceData: Array<{ member_id: number; status: string; notes: string }>,
-  ): Promise<Attendee[]> => {
+  // Create or update event attendance
+  createUpdateAttendance: async (eventId: number | string, attendanceData: AttendanceFormData[]): Promise<EventAttendance[]> => {
     try {
-      const response = await withRetry(() => apiClient.post<Attendee[]>(`/events/${eventId}/attendance`, attendanceData))
-      return response.data || []
+      const response = await withRetry(() =>
+        apiClient.post<EventAttendance[]>(`/events/${eventId}/attendance`, attendanceData)
+      )
+      return response.data
     } catch (error) {
       console.error('Error creating/updating attendance:', error)
-
-      // If we're using fallback data, return a mock response
-      if (USE_FALLBACK_DATA) {
-        console.log('Using fallback attendance data')
-        return attendanceData.map(item => ({
-          id: Math.floor(Math.random() * 1000),
-          event_id: Number(eventId),
-          member_id: item.member_id,
-          status: item.status as "Hadir" | "Izin" | "Alfa",
-          notes: item.notes,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }))
-      }
-
       throw error
     }
   },
 
-  // Upload event photos
-  uploadEventPhotos: async (
-    eventId: number | string,
-    files: File[],
-    onProgress?: (percentage: number) => void,
-  ): Promise<EventPhoto[]> => {
-    const formData = new FormData()
-
-    // Add each file to form data with the correct field name 'files'
-    // The backend expects an array of files with the field name 'files'
-    files.forEach((file) => {
-      formData.append('files', file)
-      console.log(`[uploadEventPhotos] Uploading file: ${file.name} (${file.size} bytes) for event ID: ${eventId}`)
-    })
-
+  // Upload event photo
+  uploadEventPhoto: async (eventId: number | string, file: File): Promise<EventPhoto> => {
     try {
-      console.log(`[uploadEventPhotos] FormData contains ${files.length} files for event ${eventId}`)
+      const formData = new FormData()
+      formData.append('file', file)
 
-      // Get token from localStorage
-      const token = localStorage.getItem('token')
-      if (!token) {
-        console.error('[uploadEventPhotos] No token found in localStorage')
-        throw new Error('Authentication required')
-      }
-
-      // Use the correct API endpoint as per the documentation
-      // POST /api/v1/uploads/events/{event_id}/photos with multipart/form-data
-      const response = await apiClient.post(`/uploads/events/${eventId}/photos`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          "Authorization": `Bearer ${token}`
-        },
-        onUploadProgress: (progressEvent) => {
-          if (!progressEvent.total) return
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          if (onProgress) {
-            onProgress(percentCompleted)
-          }
-        },
-      })
-
-      console.log('Upload successful:', response.data)
-
-      // Handle different response formats
-      // The API might return a single URL string, an array of URL strings, or an array of objects
-      if (typeof response.data === 'string') {
-        // Single URL string response
-        return [{
-          id: Date.now(),
-          event_id: Number(eventId),
-          photo_url: response.data,
-          uploaded_at: new Date().toISOString()
-        }]
-      } else if (Array.isArray(response.data)) {
-        if (response.data.length === 0) {
-          return []
-        }
-
-        if (typeof response.data[0] === 'string') {
-          // Array of URL strings
-          return response.data.map((url, index) => ({
-            id: Date.now() + index,
-            event_id: Number(eventId),
-            photo_url: url,
-            uploaded_at: new Date().toISOString()
-          }))
-        } else if (typeof response.data[0] === 'object') {
-          // Array of objects (already in the right format)
-          return response.data
-        }
-      }
-
-      // Default fallback
-      return []
-    } catch (error) {
-      console.error('Photo upload error:', error)
-
-      // Improved error handling
-      if (error && typeof error === 'object' && 'isAxiosError' in error) {
-        const axiosError = error as AxiosError
-        console.error('Network error details:', {
-          message: axiosError.message,
-          code: axiosError.code,
-          request: axiosError.request ? 'Request exists' : 'No request',
-          response: axiosError.response ? JSON.stringify(axiosError.response.data) : 'No response',
-          config: axiosError.config ? `${axiosError.config.method} ${axiosError.config.url}` : 'No config',
+      const response = await withRetry(() =>
+        apiClient.post<EventPhoto>(`/events/${eventId}/photos`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         })
-      }
-
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error uploading event photo:', error)
       throw error
     }
   },
 
-
-}
-
-// Finance types
-export interface Finance {
-  id: number
-  amount: string // Backend returns this as string
-  category: string
-  date: string // ISO date format
-  description: string
-  balance_before: string
-  balance_after: string
-  document_url: string | null
-  created_by: number
-  created_at: string
-  updated_at: string
-}
-
-// This matches the backend's expected request body for POST/PUT
-export interface FinanceFormData {
-  amount: number // Backend expects this as number
-  category: string
-  date: string // ISO date format
-  description: string
-}
-
-export interface FinanceHistoryResponse {
-  transactions: Finance[]
-  current_balance: string
+  // Delete event photo
+  deleteEventPhoto: async (eventId: number | string, photoId: number | string): Promise<void> => {
+    try {
+      await withRetry(() =>
+        apiClient.delete(`/events/${eventId}/photos/${photoId}`)
+      )
+    } catch (error) {
+      console.error('Error deleting event photo:', error)
+      throw error
+    }
+  },
 }
 
 // Finance API service
@@ -782,11 +331,6 @@ export const financeApi = {
     },
     signal?: AbortSignal
   ): Promise<FinanceHistoryResponse> => {
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback finance history data')
-      return fallbackFinanceHistory
-    }
-
     try {
       console.log('Fetching finance history with params:', params)
       const response = await withRetry(() =>
@@ -803,18 +347,13 @@ export const financeApi = {
 
       if (axios.isCancel(error)) {
         console.log('Request was cancelled')
-        return fallbackFinanceHistory
+        throw new Error('Request was cancelled')
       }
 
       const axiosError = error as AxiosError
       if (axiosError.code === 'ECONNABORTED') {
-        console.error('Request timed out - using fallback data')
-        return fallbackFinanceHistory
-      }
-
-      if (USE_FALLBACK_DATA) {
-        console.warn('Using fallback data due to API error')
-        return fallbackFinanceHistory
+        console.error('Request timed out')
+        throw new Error('Request timed out')
       }
 
       throw error
@@ -829,12 +368,6 @@ export const financeApi = {
     },
     signal?: AbortSignal
   ): Promise<any> => {
-    // Immediately return fallback data if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback finance summary data immediately')
-      return fallbackFinanceSummary
-    }
-
     try {
       console.log('Attempting to fetch finance summary data...');
       const response = await withRetry(() =>
@@ -854,27 +387,22 @@ export const financeApi = {
 
       // Handle canceled requests gracefully
       if (axios.isCancel(safeError)) {
-        console.log('Finance summary request was cancelled - returning fallback data')
-        return fallbackFinanceSummary // Return fallback data instead of throwing error
+        console.log('Finance summary request was cancelled')
+        throw new Error('Request was cancelled')
       }
 
       console.error('Error fetching finance summary:', safeError)
 
-      // Log detailed error information for debugging
-      if (safeError && typeof safeError === 'object') {
-        if ('isAxiosError' in safeError) {
-          const axiosError = safeError as AxiosError
-          console.error('Network error details:', {
-            message: axiosError.message || 'No message',
-            code: axiosError.code || 'No code',
-            request: axiosError.request ? 'Request exists' : 'No request',
-            response: axiosError.response ? JSON.stringify(axiosError.response.data) : 'No response',
-            config: axiosError.config ? `${axiosError.config.method} ${axiosError.config.url}` : 'No config',
-          })
-        } else {
-          // For non-Axios error objects
-          console.error('Non-Axios error object:', JSON.stringify(safeError, null, 2));
-        }
+      // Log detailed error information
+      if (axios.isAxiosError(safeError)) {
+        // For Axios errors
+        console.error('Axios error details:', {
+          status: safeError.response?.status,
+          statusText: safeError.response?.statusText,
+          data: safeError.response?.data,
+          message: safeError.message,
+          code: safeError.code
+        });
       } else if (safeError instanceof Error) {
         // For standard Error objects
         console.error('Standard error:', safeError.message, safeError.stack);
@@ -883,39 +411,12 @@ export const financeApi = {
         console.error('Primitive error value:', String(safeError));
       }
 
-      // Return fallback data instead of throwing error to prevent app from crashing
-      console.warn('Returning fallback finance summary data due to API error')
-      return fallbackFinanceSummary
+      throw new Error('Failed to fetch finance summary')
     }
   },
 
   // Get single finance record
   getFinance: async (id: number | string, signal?: AbortSignal): Promise<Finance> => {
-    // Immediately return fallback data if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback finance record data immediately')
-      // Try to find the finance record in fallbackFinanceHistory
-      const fallbackFinance = fallbackFinanceHistory.transactions.find(t => t.id === Number(id))
-      if (fallbackFinance) {
-        return fallbackFinance
-      }
-
-      // Return a default finance record if not found
-      return {
-        id: Number(id),
-        amount: "0",
-        category: "Pemasukan",
-        date: new Date().toISOString(),
-        description: "Detail transaksi tidak tersedia",
-        balance_before: "10000000",
-        balance_after: "10000000",
-        document_url: null,
-        created_by: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    }
-
     try {
       const response = await withRetry(() =>
         apiClient.get<Finance>(`/finance/${id}`, { signal })
@@ -924,21 +425,8 @@ export const financeApi = {
     } catch (error) {
       // Handle canceled requests gracefully
       if (axios.isCancel(error)) {
-        console.log('Finance record request was cancelled - returning default finance record')
-        // Return a default finance record to prevent UI errors
-        return {
-          id: Number(id),
-          amount: "0",
-          category: "",
-          date: new Date().toISOString(),
-          description: "",
-          balance_before: "0",
-          balance_after: "0",
-          document_url: null,
-          created_by: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
+        console.log('Finance record request was cancelled')
+        throw new Error('Request was cancelled')
       }
       console.error('Error fetching finance record:', error)
       throw error
@@ -946,18 +434,10 @@ export const financeApi = {
   },
 
   // Create finance record
-  createFinance: async (data: FinanceFormData): Promise<Finance> => {
+  createFinance: async (financeData: FinanceFormData): Promise<Finance> => {
     try {
-      // Ensure data is formatted correctly for the backend
-      const formattedData = {
-        amount: Number(data.amount), // Ensure it's a number
-        category: data.category,
-        date: new Date(data.date).toISOString(), // Ensure date is in ISO format
-        description: data.description
-      }
-
       const response = await withRetry(() =>
-        apiClient.post<Finance>("/finance/", formattedData)
+        apiClient.post<Finance>("/finance/", financeData)
       )
       return response.data
     } catch (error) {
@@ -967,17 +447,10 @@ export const financeApi = {
   },
 
   // Update finance record
-  updateFinance: async (id: number | string, data: Partial<FinanceFormData>): Promise<Finance> => {
+  updateFinance: async (id: number | string, financeData: FinanceFormData): Promise<Finance> => {
     try {
-      // Format the data for the backend
-      const formattedData: Record<string, any> = {}
-      if (data.amount !== undefined) formattedData.amount = Number(data.amount)
-      if (data.category !== undefined) formattedData.category = data.category
-      if (data.date !== undefined) formattedData.date = new Date(data.date).toISOString()
-      if (data.description !== undefined) formattedData.description = data.description
-
       const response = await withRetry(() =>
-        apiClient.put<Finance>(`/finance/${id}`, formattedData)
+        apiClient.put<Finance>(`/finance/${id}`, financeData)
       )
       return response.data
     } catch (error) {
@@ -989,54 +462,11 @@ export const financeApi = {
   // Delete finance record
   deleteFinance: async (id: number | string): Promise<void> => {
     try {
-      await withRetry(() => apiClient.delete(`/finance/${id}`))
+      await withRetry(() =>
+        apiClient.delete(`/finance/${id}`)
+      )
     } catch (error) {
       console.error('Error deleting finance record:', error)
-      throw error
-    }
-  },
-
-  // Upload finance document
-  uploadFinanceDocument: async (financeId: number | string, file: File): Promise<string> => {
-    try {
-      // Check if token exists
-      const token = localStorage.getItem('token')
-      if (!token) {
-        throw new Error('Anda belum login. Silakan login terlebih dahulu.')
-      }
-
-      const formData = new FormData()
-      // Use 'file' as the field name as specified in the API docs
-      // POST /api/v1/uploads/finances/{finance_id}/document with multipart/form-data and 'file' parameter
-      formData.append('file', file)
-
-      console.log(`Uploading document for finance ID: ${financeId}, file: ${file.name} (${file.size} bytes)`)
-
-      const response = await withRetry(() =>
-        apiClient.post<string>(`/uploads/finances/${financeId}/document`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          },
-        })
-      )
-
-      console.log('Upload finance document response:', response.data)
-      return response.data
-    } catch (error) {
-      console.error('Error uploading finance document:', error)
-
-      // Add more specific error handling
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as AxiosError
-        if (axiosError.response?.status === 401) {
-          console.error('Authentication error: Token invalid or expired')
-          // Clear token from localStorage
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-        }
-      }
-
       throw error
     }
   },
@@ -1064,215 +494,80 @@ export const authApi = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.detail || errorData.message || `Error ${response.status}: ${response.statusText}`
-        throw new Error(errorMessage)
+        console.error("Login failed:", response.status, errorData)
+
+        if (response.status === 401) {
+          throw new Error("Email atau password salah")
+        } else if (response.status === 403) {
+          throw new Error("Akun Anda tidak memiliki izin untuk masuk")
+        } else {
+          throw new Error("Gagal masuk. Silakan coba lagi nanti.")
+        }
       }
 
       const data = await response.json()
-
-      // Store token securely
-      setAuthToken(data.access_token)
-      localStorage.setItem('refreshToken', data.refresh_token)
-
-      // Explicitly remove any user data from localStorage for security
-      localStorage.removeItem('user')
-
       return {
         token: data.access_token,
-        refreshToken: data.refresh_token
+        refreshToken: data.refresh_token,
       }
     } catch (error) {
-      console.error('Login error details:', error)
+      console.error("Login error:", error)
       if (error instanceof Error) {
         throw error
-      } else {
-        throw new Error('Invalid credentials or server error')
       }
+      throw new Error("Terjadi kesalahan saat login")
+    }
+  },
+
+  register: async (userData: RegisterFormData): Promise<{ message: string }> => {
+    try {
+      const response = await withRetry(() =>
+        apiClient.post<{ message: string }>("/auth/register", userData)
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error registering user:', error)
+      throw error
+    }
+  },
+
+  getCurrentUser: async (): Promise<User> => {
+    try {
+      const response = await withRetry(() =>
+        apiClient.get<User>("/auth/me")
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error fetching current user:', error)
+      throw error
+    }
+  },
+
+  refreshToken: async (refreshToken: string): Promise<{ token: string }> => {
+    try {
+      const response = await withRetry(() =>
+        apiClient.post<{ token: string }>("/auth/refresh", { refreshToken })
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error refreshing token:', error)
+      throw error
     }
   },
 
   logout: async (): Promise<void> => {
     try {
-      await apiClient.post('/auth/logout')
-    } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      removeAuthToken()
-      window.location.href = "/login"
-    }
-  },
-
-  refreshToken: async (): Promise<string> => {
-    const refreshToken = localStorage.getItem('refreshToken')
-    if (!refreshToken) {
-      throw new Error('No refresh token available')
-    }
-
-    try {
-      const formData = new URLSearchParams()
-      formData.append("refresh_token", refreshToken)
-      formData.append("grant_type", "refresh_token")
-
-      const response = await apiClient.post<{ access_token: string }>(
-        '/auth/token',
-        formData.toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
+      await withRetry(() =>
+        apiClient.post("/auth/logout")
       )
-
-      setAuthToken(response.data.access_token)
-      return response.data.access_token
+      removeAuthToken()
     } catch (error) {
+      console.error('Error logging out:', error)
+      // Still remove tokens even if the API call fails
       removeAuthToken()
       throw error
     }
-  }
-}
-
-// Type definitions for API responses
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-}
-
-export interface ApiError {
-  message: string
-  code?: string
-  details?: Record<string, string[]>
-}
-
-// Event types
-export interface Event {
-  id: number
-  title: string
-  description: string
-  date: string
-  time: string
-  location: string
-  status: "akan datang" | "selesai" // Backend uses 'akan datang' as default
-  attendees?: Attendee[] | number // Can be an array of Attendee objects or a count
-  created_by?: number // Make optional for fallback data
-  created_at: string
-  updated_at: string
-  photos: EventPhoto[]
-  minutes?: string // For meeting minutes
-}
-
-export interface EventFormData {
-  title: string
-  description: string
-  date: string
-  time: string
-  location: string
-  status?: "akan datang" | "selesai" // Backend uses 'akan datang' as default
-  minutes?: string // For meeting minutes
-}
-
-export interface EventPhoto {
-  id: number
-  event_id: number
-  photo_url: string
-  uploaded_at: string
-}
-
-export interface Attendee {
-  id: number
-  member_id: number
-  event_id: number
-  status: "Hadir" | "Izin" | "Alfa" // Match the enum in the database
-  notes: string
-  created_at: string
-  updated_at: string
-  member?: {
-    name: string
-    email: string
-  }
-}
-
-// News types
-export interface NewsItem {
-  id: number
-  title: string
-  description: string
-  date: string
-  is_published: boolean
-  created_by: number
-  created_at: string
-  updated_at: string
-  photos: NewsPhoto[]
-}
-
-export interface NewsPhoto {
-  id: number
-  news_id: number
-  photo_url: string
-  uploaded_at: string
-}
-
-export interface NewsFormData {
-  title: string
-  description: string
-  date: string
-  is_published: boolean
-}
-
-// Member types
-export interface Member {
-  id: number
-  full_name: string
-  division: string
-  position: string
-}
-
-export interface MemberDetail {
-  id: number
-  full_name: string
-  email: string
-  phone_number: string
-  birth_date: string
-  division: string
-  address: string
-  position: string
-}
-
-export interface MemberFormData {
-  full_name: string
-  email: string
-  phone_number: string
-  birth_date: string
-  division: string
-  address: string
-  position: string
-}
-
-export interface MemberResponse {
-  [division: string]: Member[]
-}
-
-// Meeting Minutes types
-export interface MeetingMinutes {
-  id: number
-  title: string
-  description: string
-  date: string
-  document_url: string
-  event_id: number
-  created_at: string
-  updated_at: string
-}
-
-export interface MeetingMinutesFormData {
-  title: string
-  description: string
-  date: string
-  document_url?: string
-  event_id: number
+  },
 }
 
 // News API service
@@ -1307,7 +602,7 @@ export const newsApi = {
     }
   },
 
-  // Get single news item by ID
+  // Get single news item
   getNewsItem: async (id: number | string, signal?: AbortSignal): Promise<NewsItem> => {
     try {
       const response = await withRetry(() =>
@@ -1317,19 +612,8 @@ export const newsApi = {
     } catch (error) {
       // Handle canceled requests gracefully
       if (axios.isCancel(error)) {
-        console.log('News item request was cancelled - returning default news item')
-        // Return a default news item to prevent UI errors
-        return {
-          id: Number(id),
-          title: 'Permintaan dibatalkan',
-          description: 'Detail berita tidak dapat dimuat',
-          date: new Date().toISOString(),
-          is_published: false,
-          created_by: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          photos: []
-        }
+        console.log('News item request was cancelled')
+        throw new Error('Request was cancelled')
       }
       console.error('Error fetching news item:', error)
       throw error
@@ -1337,92 +621,39 @@ export const newsApi = {
   },
 
   // Create news item
-  createNews: async (data: NewsFormData): Promise<NewsItem> => {
+  createNewsItem: async (newsData: NewsFormData): Promise<NewsItem> => {
     try {
       const response = await withRetry(() =>
-        apiClient.post<NewsItem>("/news/", data)
+        apiClient.post<NewsItem>("/news/", newsData)
       )
       return response.data
     } catch (error) {
-      console.error('Error creating news:', error)
+      console.error('Error creating news item:', error)
       throw error
     }
   },
 
   // Update news item
-  updateNews: async (id: number | string, data: Partial<NewsFormData>): Promise<NewsItem> => {
+  updateNewsItem: async (id: number | string, newsData: NewsFormData): Promise<NewsItem> => {
     try {
       const response = await withRetry(() =>
-        apiClient.put<NewsItem>(`/news/${id}`, data)
+        apiClient.put<NewsItem>(`/news/${id}`, newsData)
       )
       return response.data
     } catch (error) {
-      console.error('Error updating news:', error)
+      console.error('Error updating news item:', error)
       throw error
     }
   },
 
   // Delete news item
-  deleteNews: async (id: number | string): Promise<void> => {
+  deleteNewsItem: async (id: number | string): Promise<void> => {
     try {
-      await withRetry(() => apiClient.delete(`/news/${id}`))
-    } catch (error) {
-      console.error('Error deleting news:', error)
-      throw error
-    }
-  },
-
-  // Upload news photo
-  uploadNewsPhoto: async (newsId: number | string, file: File): Promise<string> => {
-    try {
-      // Check if token exists
-      const token = localStorage.getItem('token')
-      if (!token) {
-        throw new Error('Anda belum login. Silakan login terlebih dahulu.')
-      }
-
-      const formData = new FormData()
-      // Use 'files' as the field name as specified in the API docs
-      // POST /api/v1/uploads/news/{news_id}/photos with multipart/form-data and 'files' array parameter
-      formData.append('files', file)
-
-      console.log(`Uploading photo for news ID: ${newsId}, file: ${file.name} (${file.size} bytes)`)
-
-      const response = await withRetry(() =>
-        apiClient.post<string | string[]>(`/uploads/news/${newsId}/photos`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          },
-        })
+      await withRetry(() =>
+        apiClient.delete(`/news/${id}`)
       )
-
-      console.log('Upload news photo response:', response.data)
-
-      // Handle different response formats
-      if (typeof response.data === 'string') {
-        // Single URL string response
-        return response.data
-      } else if (Array.isArray(response.data) && response.data.length > 0) {
-        // Array of URL strings - return the first one
-        return response.data[0]
-      }
-
-      return ''
     } catch (error) {
-      console.error('Error uploading news photo:', error)
-
-      // Add more specific error handling
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as AxiosError
-        if (axiosError.response?.status === 401) {
-          console.error('Authentication error: Token invalid or expired')
-          // Clear token from localStorage
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-        }
-      }
-
+      console.error('Error deleting news item:', error)
       throw error
     }
   },
@@ -1432,351 +663,102 @@ export const newsApi = {
 export const meetingMinutesApi = {
   // Get all meeting minutes
   getMeetingMinutes: async (signal?: AbortSignal): Promise<MeetingMinutes[]> => {
-    if (USE_FALLBACK_DATA) {
-      console.log('Using fallback meeting minutes data immediately');
-      return mockMeetingMinutesApi.getMeetingMinutes();
-    }
-
     try {
-      console.log('Fetching meeting minutes with increased timeout...');
-      // Create a default fallback array to return in case of errors
-      const fallbackData: MeetingMinutes[] = [
-        {
-          id: 1,
-          title: 'Rapat Anggota Tahunan',
-          description: 'Pembahasan program kerja dan evaluasi kegiatan',
-          date: new Date().toISOString().split('T')[0],
-          document_url: '',
-          event_id: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
+      console.log('Fetching meeting minutes from API');
       const response = await withRetry(() =>
-        apiClient.get<MeetingMinutes[]>("/meeting-minutes/", {
-          signal,
-          timeout: 30000 // Increase timeout to 30 seconds for this specific request
-        })
+        apiClient.get<MeetingMinutes[]>("/meeting-minutes/", { signal })
       )
+
       console.log('Successfully fetched meeting minutes:', response.data.length);
-
-      // Reset the flag since we successfully connected to the API
-      usingMockApi = false;
-
-      return response.data.length > 0 ? response.data : fallbackData
+      return response.data
     } catch (error) {
-      // Create a default fallback array to return in case of errors
-      const fallbackData: MeetingMinutes[] = [
-        {
-          id: 1,
-          title: 'Rapat Anggota Tahunan',
-          description: 'Pembahasan program kerja dan evaluasi kegiatan',
-          date: new Date().toISOString().split('T')[0],
-          document_url: '',
-          event_id: 1,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-
-      // Handle canceled requests gracefully
-      if (axios.isCancel(error)) {
-        console.log('Meeting minutes request was cancelled - returning fallback data')
-        return fallbackData // Return fallback data instead of empty array
-      }
-
-      // Handle timeout errors specifically
-      if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
-        console.error('Timeout error fetching meeting minutes');
-        console.warn('Using fallback data due to timeout');
-        return fallbackData;
-      }
-
-      // Handle network errors
-      if (axios.isAxiosError(error) && error.message === 'Network Error') {
-        console.error('Network error fetching meeting minutes');
-        console.warn('Using fallback data due to network error');
-        return fallbackData;
-      }
-
-      // Handle 403 errors (permission denied)
-      if (axios.isAxiosError(error) && error.response?.status === 403) {
-        console.error('Permission denied (403) fetching meeting minutes');
-        console.warn('Using fallback data due to permission denied');
-        return fallbackData;
-      }
-
-      console.error('Error fetching meeting minutes:', error)
-      console.warn('Using fallback data due to unknown error');
-
-      // Return fallback data instead of empty array to prevent UI from breaking
-      return fallbackData
+      console.error('Error fetching meeting minutes:', error);
+      throw error;
     }
   },
 
   // Get meeting minutes by ID
   getMeetingMinutesById: async (id: number | string, signal?: AbortSignal): Promise<MeetingMinutes> => {
-    // Create a default fallback object to return in case of errors
-    const fallbackData: MeetingMinutes = {
-      id: Number(id),
-      title: 'Rapat Anggota Tahunan',
-      description: 'Pembahasan program kerja dan evaluasi kegiatan',
-      date: new Date().toISOString().split('T')[0],
-      document_url: '',
-      event_id: Number(id),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    // Use fallback data immediately if enabled
-    if (USE_FALLBACK_DATA) {
-      console.log(`Using fallback meeting minutes data immediately for ID ${id}`);
-      return fallbackData;
-    }
-
     try {
-      console.log(`Fetching meeting minutes with ID ${id} with increased timeout...`);
+      console.log(`Fetching meeting minutes with ID ${id}`);
       const response = await withRetry(() =>
-        apiClient.get<MeetingMinutes>(`/meeting-minutes/${id}`, {
-          signal,
-          timeout: 30000 // Increase timeout to 30 seconds for this specific request
-        })
+        apiClient.get<MeetingMinutes>(`/meeting-minutes/${id}`, { signal })
       )
+
       console.log(`Successfully fetched meeting minutes with ID ${id}`);
-      return response.data
+      return response.data;
     } catch (error) {
-      // Handle canceled requests gracefully
-      if (axios.isCancel(error)) {
-        console.log('Meeting minutes request was cancelled - returning fallback data')
-        return fallbackData;
-      }
-
-      // Handle timeout errors specifically
-      if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
-        console.error(`Timeout error fetching meeting minutes with ID ${id}`);
-        console.warn('Using fallback data due to timeout');
-        return {
-          ...fallbackData,
-          title: 'Permintaan Timeout',
-          description: 'Data notulensi tidak dapat dimuat karena waktu permintaan habis. Silakan coba lagi nanti.'
-        };
-      }
-
-      // Handle 403 errors (permission denied)
-      if (axios.isAxiosError(error) && error.response?.status === 403) {
-        console.error(`Permission denied (403) fetching meeting minutes with ID ${id}`);
-        console.warn('Using fallback data due to permission denied');
-        return {
-          ...fallbackData,
-          title: 'Akses Ditolak',
-          description: 'Anda tidak memiliki izin untuk mengakses data notulensi ini.'
-        };
-      }
-
-      console.error(`Error fetching meeting minutes with ID ${id}:`, error)
-      console.warn('Using fallback data due to unknown error');
-
-      // Return fallback data with error message
-      return {
-        ...fallbackData,
-        title: 'Error',
-        description: 'Terjadi kesalahan saat memuat data notulensi. Silakan coba lagi nanti.'
-      };
+      console.error(`Error fetching meeting minutes with ID ${id}:`, error);
+      throw error;
     }
   },
 
   // Create meeting minutes
   createMeetingMinutes: async (data: MeetingMinutesFormData): Promise<MeetingMinutes> => {
-    // Ensure description is a string
-    const formattedData = {
-      ...data,
-      description: data.description || '',
-      document_url: data.document_url || undefined
-    };
-
     try {
-      console.log('Sending meeting minutes data to API with increased timeout:', formattedData);
+      console.log('Creating meeting minutes:', data);
 
-      // For POST requests, we'll keep the JSON object format as it seems to be expected
+      // Format data as expected by the API
+      const formattedData = {
+        title: data.title,
+        description: data.description, // Now required
+        date: data.date,
+        document_url: data.document_url || '',
+        event_id: data.event_id
+      };
+
       const response = await withRetry(() =>
-        apiClient.post<MeetingMinutes>("/meeting-minutes/", formattedData, {
-          timeout: 30000, // Increase timeout to 30 seconds for this specific request
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+        apiClient.post<MeetingMinutes>("/meeting-minutes/", formattedData)
       )
+
       console.log('Successfully created meeting minutes:', response.data);
-
-      // Reset the flag since we successfully connected to the API
-      usingMockApi = false;
-
       return response.data
     } catch (error) {
-      // Handle specific error types
-      if (axios.isAxiosError(error)) {
-        // Handle timeout errors
-        if (error.code === 'ECONNABORTED') {
-          console.error('Timeout error creating meeting minutes');
-
-          if (USE_FALLBACK_DATA) {
-            console.warn('Using mock API as fallback due to timeout');
-            usingMockApi = true;
-            return mockMeetingMinutesApi.createMeetingMinutes(formattedData);
-          }
-
-          throw new Error('Waktu permintaan habis. Silakan coba lagi nanti.');
-        }
-
-        // Handle network errors
-        if (error.message === 'Network Error') {
-          console.error('Network error creating meeting minutes');
-
-          if (USE_FALLBACK_DATA) {
-            console.warn('Using mock API as fallback due to network error');
-            usingMockApi = true;
-            return mockMeetingMinutesApi.createMeetingMinutes(formattedData);
-          }
-
-          throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.');
-        }
-
-        // Handle server errors
-        if (error.response?.status && error.response.status >= 500) {
-          console.error(`Server error (${error.response.status}) creating meeting minutes`);
-
-          if (USE_FALLBACK_DATA) {
-            console.warn('Using mock API as fallback due to server error');
-            usingMockApi = true;
-            return mockMeetingMinutesApi.createMeetingMinutes(formattedData);
-          }
-
-          throw new Error('Terjadi kesalahan pada server. Silakan coba lagi nanti.');
-        }
-
-        // Handle validation errors
-        if (error.response?.status === 422) {
-          console.error('Validation error (422) creating meeting minutes:', error.response.data);
-
-          // Try to extract validation error details
-          let errorMessage = 'Data tidak valid. Silakan periksa kembali data yang dimasukkan.';
-
-          if (error.response.data?.detail) {
-            try {
-              // If detail is an array of validation errors
-              if (Array.isArray(error.response.data.detail)) {
-                const firstError = error.response.data.detail[0];
-                if (firstError && firstError.msg) {
-                  errorMessage = `Validasi gagal: ${firstError.msg}`;
-                }
-              } else if (typeof error.response.data.detail === 'string') {
-                errorMessage = `Validasi gagal: ${error.response.data.detail}`;
-              }
-            } catch (e) {
-              console.error('Error parsing validation error details:', e);
-            }
-          }
-
-          throw new Error(errorMessage);
-        }
-      }
-
-      // For other errors, try using the mock API if fallback is enabled
       console.error('Error creating meeting minutes:', error);
-
-      if (USE_FALLBACK_DATA) {
-        console.warn('Using mock API as fallback due to unknown error');
-        usingMockApi = true;
-        return mockMeetingMinutesApi.createMeetingMinutes(formattedData);
-      }
-
-      throw new Error('Terjadi kesalahan saat membuat notulensi. Silakan coba lagi.');
+      throw error;
     }
   },
 
   // Update meeting minutes
-  updateMeetingMinutes: async (id: number | string, data: Partial<MeetingMinutesFormData>): Promise<MeetingMinutes> => {
+  updateMeetingMinutes: async (id: number | string, data: MeetingMinutesFormData): Promise<MeetingMinutes> => {
     try {
-      // According to the API documentation, the PUT endpoint expects a string as the request body
-      // We'll convert our data to a JSON string
+      console.log(`Updating meeting minutes with ID ${id}:`, data);
 
-      // First, ensure description is a string if present
+      // Format data as expected by the API
       const formattedData = {
-        ...data,
-        description: data.description !== undefined ? (data.description || '') : undefined,
-        document_url: data.document_url || undefined
+        title: data.title,
+        description: data.description, // Now required
+        date: data.date,
+        document_url: data.document_url || '',
+        event_id: data.event_id
       };
 
-      // Convert the data to a JSON string
-      const jsonString = JSON.stringify(formattedData);
-
-      console.log(`Updating meeting minutes ${id} with data and increased timeout:`, jsonString);
-
       const response = await withRetry(() =>
-        apiClient.put<MeetingMinutes>(`/meeting-minutes/${id}`, jsonString, {
-          timeout: 30000, // Increase timeout to 30 seconds for this specific request
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
+        apiClient.put<MeetingMinutes>(`/meeting-minutes/${id}`, formattedData)
       )
+
       console.log(`Successfully updated meeting minutes with ID ${id}:`, response.data);
-      return response.data
+      return response.data;
     } catch (error) {
-      // Handle specific error types
-      if (axios.isAxiosError(error)) {
-        // Handle timeout errors
-        if (error.code === 'ECONNABORTED') {
-          console.error(`Timeout error updating meeting minutes with ID ${id}`);
-          throw new Error('Waktu permintaan habis. Silakan coba lagi nanti.');
-        }
-
-        // Handle network errors
-        if (error.message === 'Network Error') {
-          console.error(`Network error updating meeting minutes with ID ${id}`);
-          throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda dan coba lagi.');
-        }
-
-        // Handle server errors
-        if (error.response?.status && error.response.status >= 500) {
-          console.error(`Server error (${error.response.status}) updating meeting minutes with ID ${id}`);
-          throw new Error('Terjadi kesalahan pada server. Silakan coba lagi nanti.');
-        }
-
-        // Handle validation errors
-        if (error.response?.status === 422) {
-          console.error(`Validation error (422) updating meeting minutes with ID ${id}:`, error.response.data);
-          throw new Error('Data tidak valid. Silakan periksa kembali data yang dimasukkan.');
-        }
-      }
-
-      // For other errors, log and throw a generic error message
-      console.error('Error updating meeting minutes:', error);
-      throw new Error('Terjadi kesalahan saat memperbarui notulensi. Silakan coba lagi.');
+      console.error(`Error updating meeting minutes with ID ${id}:`, error);
+      throw error;
     }
   },
 
   // Delete meeting minutes
   deleteMeetingMinutes: async (id: number | string): Promise<void> => {
     try {
-      console.log(`Deleting meeting minutes with ID ${id} with increased timeout...`);
-      await withRetry(() => apiClient.delete(`/meeting-minutes/${id}`, {
-        timeout: 30000 // Increase timeout to 30 seconds for this specific request
-      }))
+      console.log(`Deleting meeting minutes with ID ${id}`);
+      await withRetry(() =>
+        apiClient.delete(`/meeting-minutes/${id}`)
+      )
       console.log(`Successfully deleted meeting minutes with ID ${id}`);
     } catch (error) {
-      // Handle timeout errors specifically
-      if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
-        console.error(`Timeout error deleting meeting minutes with ID ${id}`);
-        throw new Error('Waktu permintaan habis. Silakan coba lagi nanti.');
-      }
-
-      console.error('Error deleting meeting minutes:', error)
-      throw error
+      console.error(`Error deleting meeting minutes with ID ${id}:`, error);
+      throw error;
     }
-  },
-}
+  }
+};
 
 // Member API service
 export const memberApi = {
@@ -1794,205 +776,214 @@ export const memberApi = {
         return {} // Return empty object instead of throwing error
       }
       console.error('Error fetching members:', error)
-
-      // Only use fallback data if explicitly enabled
-      if (USE_FALLBACK_DATA) {
-        console.log('Using fallback members data')
-        return fallbackMembers
-      }
-
-      // Otherwise, throw the error to be handled by the UI
       throw error
     }
   },
 
-  // Create member biodata
-  createMemberBiodata: async (data: MemberFormData): Promise<Member> => {
+  // Get single member
+  getMember: async (id: number | string, signal?: AbortSignal): Promise<Member> => {
     try {
       const response = await withRetry(() =>
-        apiClient.post<Member>("/members/biodata", data)
+        apiClient.get<Member>(`/members/${id}`, { signal })
       )
       return response.data
     } catch (error) {
-      console.error('Error creating member biodata:', error)
+      // Handle canceled requests gracefully
+      if (axios.isCancel(error)) {
+        console.log('Member request was cancelled')
+        throw new Error('Request was cancelled')
+      }
+      console.error('Error fetching member:', error)
       throw error
     }
   },
 
-  // Update member biodata
-  updateMemberBiodata: async (data: MemberFormData): Promise<Member> => {
+  // Create member
+  createMember: async (memberData: MemberFormData): Promise<Member> => {
     try {
       const response = await withRetry(() =>
-        apiClient.put<Member>("/members/biodata/", data)
+        apiClient.post<Member>("/members/", memberData)
       )
       return response.data
     } catch (error) {
-      console.error('Error updating member biodata:', error)
+      console.error('Error creating member:', error)
       throw error
     }
   },
 
-  // Delete user
-  deleteUser: async (userId: number | string): Promise<void> => {
+  // Update member
+  updateMember: async (id: number | string, memberData: MemberFormData): Promise<Member> => {
     try {
-      await withRetry(() => apiClient.delete(`/members/user/${userId}`))
+      const response = await withRetry(() =>
+        apiClient.put<Member>(`/members/${id}`, memberData)
+      )
+      return response.data
     } catch (error) {
-      console.error('Error deleting user:', error)
+      console.error('Error updating member:', error)
+      throw error
+    }
+  },
+
+  // Delete member
+  deleteMember: async (id: number | string): Promise<void> => {
+    try {
+      await withRetry(() =>
+        apiClient.delete(`/members/${id}`)
+      )
+    } catch (error) {
+      console.error('Error deleting member:', error)
       throw error
     }
   },
 }
 
-// Helper function to format event data for API - exported for use in components
-export function formatEventData(data: Partial<EventFormData>, isCreate = false): Record<string, any> {
-  // Only validate required fields for create operations
-  if (isCreate) {
-    if (!data.title) throw new Error("Title is required")
-    if (!data.date) throw new Error("Date is required")
-    if (!data.location) throw new Error("Location is required")
-  }
-
-  try {
-    // Create formatted data object
-    const formattedData: Record<string, any> = {}
-
-    // Format title if present
-    if (data.title !== undefined) {
-      formattedData.title = data.title.trim()
-    }
-
-    // Format description if present
-    if (data.description !== undefined) {
-      formattedData.description = data.description.trim() || ""
-    }
-
-    // Format location if present
-    if (data.location !== undefined) {
-      formattedData.location = data.location.trim()
-    }
-
-    // Format status if present
-    if (data.status !== undefined) {
-      formattedData.status = data.status
-    }
-
-    // Format minutes if present
-    if (data.minutes !== undefined) {
-      formattedData.minutes = data.minutes
-    }
-
-    // Format date and time if present
-    if (data.date) {
-      try {
-        // Parse the date string to ensure it's valid
-        const dateObj = new Date(data.date)
-        if (isNaN(dateObj.getTime())) {
-          throw new Error(`Invalid date: ${data.date}`)
-        }
-
-        // Format time if present
-        let timeString = "00:00:00"
-        if (data.time) {
-          const [hours, minutes] = data.time.split(':').map(Number)
-          timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`
-        }
-
-        // Format date as ISO string with time for the API (YYYY-MM-DDTHH:MM:SS.sssZ)
-        const isoDate = `${data.date}T${timeString}.000Z`
-        formattedData.date = isoDate
-        formattedData.time = `${timeString}.000Z`
-      } catch (dateError) {
-        console.error('Error formatting date:', dateError)
-        throw new Error(`Invalid date format: ${data.date}`)
-      }
-    }
-
-    // Log the formatted data for debugging
-    console.log('Formatted event data:', formattedData)
-
-    return formattedData
-  } catch (error) {
-    console.error('Error formatting event data:', {
-      input: data,
-      error: error instanceof Error ? error.message : error
-    })
-
-    // Throw a more specific error message
-    if (error instanceof Error) {
-      throw error; // Preserve the original error message
-    } else {
-      throw new Error('Invalid data format')
-    }
-  }
+// Types
+export interface Event {
+  id: number
+  title: string
+  description: string
+  date: string
+  time: string
+  location: string
+  status: string
+  created_at: string
+  updated_at: string
+  photos: EventPhoto[]
+  attendees: number[]
 }
 
-// Error handling utilities
-export function extractErrorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'isAxiosError' in error) {
-    const axiosError = error as AxiosError<{
-      detail?: string | Record<string, any>;
-      message?: string;
-      errors?: Record<string, string[]>;
-    }>
-
-    // Log the full error response for debugging
-    console.error('Full API error response:', {
-      status: axiosError.response?.status,
-      statusText: axiosError.response?.statusText,
-      data: axiosError.response?.data,
-      headers: axiosError.response?.headers,
-    })
-
-    // Special handling for 422 Unprocessable Entity errors
-    if (axiosError.response?.status === 422) {
-      console.log('Handling 422 validation error')
-      return 'Validation error: The data format is incorrect. Please check the form fields.'
-    }
-
-    // Try to extract error message from response data
-    if (axiosError.response?.data) {
-      const data = axiosError.response.data as {
-        detail?: string | Record<string, any>;
-        message?: string;
-        errors?: Record<string, string[]>;
-      }
-
-      // Check for nested error details
-      if (data.detail) {
-        if (typeof data.detail === 'string') {
-          return data.detail
-        } else if (typeof data.detail === 'object') {
-          // Handle object-type detail (common in FastAPI validation errors)
-          return JSON.stringify(data.detail)
-        }
-      }
-
-      // Check for error message
-      if (data.message) {
-        return data.message
-      }
-
-      // Check for validation errors
-      if (data.errors) {
-        const errorMessages = Object.entries(data.errors)
-          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-          .join('\n')
-        return errorMessages || 'Validation error'
-      }
-    }
-
-    // Fallback to status text or generic message
-    return axiosError.response?.statusText || 'An error occurred while making the request'
-  }
-
-  // Handle non-Axios errors
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return 'An unknown error occurred'
+export interface EventPhoto {
+  id: number
+  event_id: number
+  photo_url: string
+  uploaded_at: string
 }
 
-export default apiClient
+export interface EventAttendance {
+  id: number
+  event_id: number
+  member_id: number
+  status: "Hadir" | "Izin" | "Alfa"
+  notes: string
+  created_at: string
+  updated_at: string
+}
 
+export interface EventFormData {
+  title: string
+  description: string
+  date: string
+  time: string
+  location: string
+  status: string
+}
 
+export interface AttendanceFormData {
+  member_id: number
+  status: "Hadir" | "Izin" | "Alfa"
+  notes: string
+}
+
+// Finance types
+export interface Finance {
+  id: number
+  amount: string // Backend returns this as string
+  category: string
+  date: string // ISO date format
+  description: string
+  balance_before: string
+  balance_after: string
+  document_url: string | null
+  created_by: number
+  created_at: string
+  updated_at: string
+}
+
+// This matches the backend's expected request body for POST/PUT
+export interface FinanceFormData {
+  amount: number // Backend expects this as number
+  category: string
+  date: string // ISO date format
+  description: string
+}
+
+export interface FinanceHistoryResponse {
+  transactions: Finance[]
+  current_balance: string
+}
+
+// Auth types
+export interface User {
+  id: number
+  username: string
+  email: string
+  full_name: string
+  is_active: boolean
+  is_superuser: boolean
+  created_at: string
+}
+
+export interface RegisterFormData {
+  username: string
+  email: string
+  password: string
+  full_name: string
+}
+
+// News types
+export interface NewsItem {
+  id: number
+  title: string
+  content: string
+  image_url: string | null
+  is_published: boolean
+  created_at: string
+  updated_at: string
+  author: string
+}
+
+export interface NewsFormData {
+  title: string
+  content: string
+  image_url?: string
+  is_published: boolean
+  author: string
+}
+
+// Meeting Minutes types
+export interface MeetingMinutes {
+  id: number
+  title: string
+  description: string
+  date: string
+  document_url: string
+  event_id: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MeetingMinutesFormData {
+  title: string
+  description: string // Changed from optional to required
+  date: string
+  document_url?: string
+  event_id: number
+}
+
+// Member types
+export interface Member {
+  id: number
+  full_name: string
+  division: string
+  position: string
+}
+
+export interface MemberFormData {
+  full_name: string
+  division: string
+  position: string
+}
+
+export interface MemberResponse {
+  [division: string]: Member[]
+}

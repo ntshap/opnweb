@@ -38,7 +38,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
 import { NetworkStatus } from "@/components/ui/network-status"
-import { MockApiIndicator } from "@/components/ui/mock-api-indicator"
 
 // Dynamically import components that might cause hydration issues
 const NotificationsDropdown = dynamic(
@@ -279,7 +278,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Status indicators */}
         <NetworkStatus />
-        <MockApiIndicator />
       </div>
     </div>
   )

@@ -12,10 +12,8 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
   console.log('Set API URL:', process.env.NEXT_PUBLIC_API_URL);
 }
 
-// Enable fallback data if needed for development or preview builds
-if (process.env.CONTEXT === 'deploy-preview' || process.env.CONTEXT === 'branch-deploy') {
-  process.env.NEXT_PUBLIC_USE_FALLBACK_DATA = 'true';
-  console.log('Enabled fallback data for preview build');
-}
+// Always disable fallback data
+process.env.NEXT_PUBLIC_USE_FALLBACK_DATA = 'false';
+console.log('Disabled fallback data for all builds');
 
 console.log('Build configuration complete');

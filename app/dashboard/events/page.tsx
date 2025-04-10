@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { format, parseISO } from "date-fns"
 import { Calendar, Search, Plus, Loader2, ImageIcon, Eye, Edit2, Trash2, ChevronLeft, ChevronRight, Upload } from "lucide-react"
-import { USE_FALLBACK_DATA } from "@/lib/api"
+
 import { useEvents, useSearchEvents, useEventMutations } from "@/hooks/useEvents"
 import { useEventAttendanceCounts } from "@/hooks/useEventAttendanceCounts"
 import type { Event } from "@/lib/api"

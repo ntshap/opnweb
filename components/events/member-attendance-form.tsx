@@ -42,11 +42,8 @@ export function MemberAttendanceForm({ eventId, onAttendanceChange }: MemberAtte
       )
       setAttendanceRecords(initialRecords)
     } else {
-      // Use mock data when no members are available
-      const mockMembers = [
-        { member_id: 1, name: "Dian P", division: "members", status: "Hadir", notes: "" }
-      ]
-      setAttendanceRecords(mockMembers)
+      // No members available, set empty array
+      setAttendanceRecords([])
     }
   }, [members])
 
