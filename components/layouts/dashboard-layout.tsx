@@ -56,9 +56,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isClient, setIsClient] = useState(false)
 
-  // Set isClient to true on mount
+  // Set isClient to true on mount and check authentication
   useEffect(() => {
     setIsClient(true)
+
+    // Check if user is authenticated
+    const token = localStorage.getItem("token")
+    if (!token) {
+      // User is not authenticated, redirect to login
+      router.push("/login")
+      toast({
+        title: "Authentication required",
+        description: "Please log in to access the dashboard.",
+        variant: "destructive",
+      })
+    }
   }, [])
 
   // Check if mobile on mount and when window resizes
@@ -80,17 +92,32 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
+      // Import auth functions to avoid circular dependencies
+      const { authApi } = await import('@/lib/api');
+      await authApi.logout();
+
+      // Clear auth tokens manually as a fallback
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+
       toast({
         title: "Berhasil keluar",
         description: "Anda telah keluar dari akun Anda.",
       })
+
+      // Redirect to login page
       router.push("/login")
     } catch (error) {
+      // Even if there's an error, clear tokens and redirect
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+
       toast({
-        title: "Kesalahan",
-        description: "Terjadi masalah saat keluar.",
-        variant: "destructive",
+        title: "Keluar",
+        description: "Anda telah keluar dari akun Anda.",
       })
+
+      router.push("/login")
     }
   }
 
