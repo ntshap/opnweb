@@ -1,11 +1,15 @@
 [build]
   command = "npm run build:netlify"
-  publish = "out"
+  publish = ".next"
 
 [build.environment]
   NETLIFY = "true"
   NODE_VERSION = "20"
   NEXT_PUBLIC_API_URL = "https://backend-project-pemuda.onrender.com/api/v1"
+  NEXT_PUBLIC_USE_FALLBACK_DATA = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "esbuild"
