@@ -6,8 +6,7 @@
   from = "/dashboard/*"
   to = "/login"
   status = 302
-  force = false
-  conditions = {Role = ["anonymous"]}
+  force = true
 
 # Handle client-side routing
 [[redirects]]

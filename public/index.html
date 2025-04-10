@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="refresh" content="0;url=/login" />
+  <title>OPN - Sistem Manajemen Acara</title>
+  <meta name="description" content="Kelola acara dan aktivitas organisasi Anda" />
+  <link rel="icon" href="/images/opn-logo.png" type="image/png" />
+  
+  <!-- Authentication check script -->
+  <script>
+    // Function to check if user is authenticated
+    function isAuthenticated() {
+      // Check localStorage first
+      const token = localStorage.getItem('token');
+      if (token) return true;
+      
+      // Fallback to cookies
+      const cookieToken = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+      return !!cookieToken;
+    }
+    
+    // If authenticated, redirect to dashboard, otherwise to login
+    if (isAuthenticated()) {
+      window.location.href = '/dashboard';
+    } else {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body>
+  <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+    <div style="border-top: 2px solid #6366f1; border-bottom: 2px solid #6366f1; width: 50px; height: 50px; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    <p style="margin-top: 20px; font-family: sans-serif;">Loading...</p>
+  </div>
+  
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

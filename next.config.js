@@ -30,8 +30,8 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // For Netlify, we'll use the standalone output
-  output: process.env.NETLIFY === 'true' ? undefined : 'standalone',
+  // Use static export for Netlify
+  output: 'export',
   // Disable trailing slash
   trailingSlash: false,
 };

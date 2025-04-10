@@ -3,16 +3,14 @@
 import { useEffect } from "react"
 import { redirect } from "next/navigation"
 import { useRouter } from "next/navigation"
+import { isAuthenticated } from "@/lib/auth-utils"
 
 export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("token") ||
-                 document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1")
-
-    if (token) {
+    // Check if user is authenticated using our utility function
+    if (isAuthenticated()) {
       // User is authenticated, redirect to dashboard
       router.push("/dashboard")
     } else {

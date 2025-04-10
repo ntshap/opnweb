@@ -4,23 +4,28 @@ import type React from "react"
 import { useState, useEffect, useLayoutEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "@/components/auth/auth-provider"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import {
   LayoutDashboard,
-  Users,
   Calendar,
-  DollarSign,
+  Users,
   FileText,
   Settings,
-  Search,
-  Menu,
-  LogOut,
-  ChevronDown,
-  User,
   HelpCircle,
-  BarChart3,
-
+  LogOut,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Bell,
+  Search,
+  User,
+  CreditCard,
+  BarChart,
+  Newspaper,
+  Home,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -49,29 +54,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
+  const { logout } = useAuth() // Use the auth context
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isClient, setIsClient] = useState(false)
 
-  // Set isClient to true on mount and check authentication
+  // Set isClient to true on mount
   useEffect(() => {
     setIsClient(true)
-
-    // Check if user is authenticated (from localStorage or cookies)
-    const token = localStorage.getItem("token") ||
-                 document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1")
-
-    if (!token) {
-      // User is not authenticated, redirect to login
-      router.push("/login")
-      toast({
-        title: "Authentication required",
-        description: "Please log in to access the dashboard.",
-        variant: "destructive",
-      })
-    }
   }, [])
 
   // Check if mobile on mount and when window resizes
@@ -86,176 +78,175 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Searching for:", searchQuery)
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  const handleLogout = async () => {
-    try {
-      // Import auth functions to avoid circular dependencies
-      const { authApi } = await import('@/lib/api');
-      await authApi.logout();
+  // Toggle sidebar collapse
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed)
+  }
 
-      // Clear auth tokens manually as a fallback
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-
-      // Also clear cookies
-      document.cookie = "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "refreshToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-      toast({
-        title: "Berhasil keluar",
-        description: "Anda telah keluar dari akun Anda.",
-      })
-
-      // Redirect to login page
-      router.push("/login")
-    } catch (error) {
-      // Even if there's an error, clear tokens and redirect
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-
-      // Also clear cookies
-      document.cookie = "token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      document.cookie = "refreshToken=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
-      toast({
-        title: "Keluar",
-        description: "Anda telah keluar dari akun Anda.",
-      })
-
-      router.push("/login")
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`)
     }
   }
 
-  const navigation = [
-    { name: "Dasbor", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Acara", href: "/dashboard/events", icon: Calendar },
-    { name: "Anggota", href: "/dashboard/members", icon: Users },
-    { name: "Keuangan", href: "/dashboard/finance", icon: DollarSign },
-    { name: "Berita", href: "/dashboard/news", icon: FileText },
-  ]
-
-  // Don't render anything until we're on the client
-  if (!isClient) {
-    return null
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      // Use the logout function from auth context
+      await logout()
+    } catch (error) {
+      console.error('Error during logout:', error)
+    }
   }
 
+  // Navigation items
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { href: "/dashboard/events", label: "Acara", icon: <Calendar className="h-5 w-5" /> },
+    { href: "/dashboard/members", label: "Anggota", icon: <Users className="h-5 w-5" /> },
+    { href: "/dashboard/finance", label: "Keuangan", icon: <CreditCard className="h-5 w-5" /> },
+    { href: "/dashboard/reports", label: "Laporan", icon: <BarChart className="h-5 w-5" /> },
+    { href: "/dashboard/news", label: "Berita", icon: <Newspaper className="h-5 w-5" /> },
+    { href: "/dashboard/documents", label: "Dokumen", icon: <FileText className="h-5 w-5" /> },
+  ]
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen bg-gray-100">
+      {/* Mobile menu overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={toggleMobileMenu}
+        ></div>
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 z-50 flex h-full w-64 flex-col bg-gray-900 text-white transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
-          isSidebarCollapsed ? "md:w-16" : "md:w-64"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-white shadow-lg transition-all duration-300 lg:relative lg:z-auto ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        } ${isSidebarCollapsed ? "w-20" : "w-64"}`}
       >
-        <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/dashboard" className={`flex items-center gap-3 ${isSidebarCollapsed ? "md:hidden" : ""}`}>
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white overflow-hidden">
+        {/* Sidebar header */}
+        <div className="flex h-16 items-center justify-between border-b px-4">
+          <Link href="/dashboard" className="flex items-center space-x-2">
+            {!isSidebarCollapsed && (
+              <>
+                <Image
+                  src="/images/opn-logo.png"
+                  alt="OPN Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
+                <span className="text-lg font-bold">OPN Admin</span>
+              </>
+            )}
+            {isSidebarCollapsed && (
               <Image
                 src="/images/opn-logo.png"
                 alt="OPN Logo"
-                width={28}
-                height={28}
-                className="object-contain"
-                priority
+                width={32}
+                height={32}
+                className="h-8 w-8 mx-auto"
               />
-            </div>
-            <span className="text-xl font-bold text-white">OPN</span>
+            )}
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden md:flex"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          >
-            <ChevronDown
-              className={`h-6 w-6 transform transition-transform duration-200 ${
-                isSidebarCollapsed ? "rotate-90" : "-rotate-90"
-              }`}
-            />
-          </Button>
+          <div className="flex items-center lg:hidden">
+            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
+          <div className="hidden lg:flex">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              {isSidebarCollapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
         </div>
-        <ScrollArea className="flex-1 px-3">
-          <nav className="space-y-2 py-4">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
 
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  prefetch={true}
-                  onMouseEnter={() => {
-                    // Prefetch the page when hovering over the link
-                    router.prefetch(item.href)
-                  }}
-                >
-                  <span
-                    className={`flex items-center rounded-lg px-3 py-2 transition-colors hover:bg-gray-800 ${
-                      isActive ? "bg-gray-800 text-white" : "text-gray-400"
-                    }`}
-                  >
-                    <item.icon className={`h-5 w-5 ${isSidebarCollapsed ? "" : "mr-3"}`} />
-                    {!isSidebarCollapsed && <span>{item.name}</span>}
-                  </span>
-                </Link>
-              )
-            })}
+        {/* Sidebar content */}
+        <ScrollArea className="flex-1 py-4">
+          <nav className="space-y-1 px-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                  pathname === item.href || pathname.startsWith(`${item.href}/`)
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-gray-700 hover:bg-gray-100"
+                } ${isSidebarCollapsed ? "justify-center" : "justify-start"}`}
+              >
+                {item.icon}
+                {!isSidebarCollapsed && <span className="ml-3">{item.label}</span>}
+              </Link>
+            ))}
           </nav>
         </ScrollArea>
+
+        {/* Sidebar footer */}
+        <div className="border-t p-4">
+          <Link
+            href="/dashboard/settings"
+            className={`flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 ${
+              isSidebarCollapsed ? "justify-center" : "justify-start"
+            }`}
+          >
+            <Settings className="h-5 w-5" />
+            {!isSidebarCollapsed && <span className="ml-3">Pengaturan</span>}
+          </Link>
+        </div>
       </aside>
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top navigation */}
-        <header className="flex h-16 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
+      <div className={`flex flex-1 flex-col ${isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`}>
+        {/* Header */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 shadow-sm">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleMobileMenu}>
               <Menu className="h-6 w-6" />
             </Button>
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
+            <form onSubmit={handleSearch} className="ml-4 hidden md:block">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
                 <Input
                   type="search"
                   placeholder="Cari..."
-                  className="w-64 md:w-96 pl-8"
+                  className="w-64 pl-8"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
             </form>
           </div>
-
-          <div className="flex items-center gap-4">
-            <NotificationsDropdown />
-
+          <div className="flex items-center space-x-3">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/">
+                <Home className="h-5 w-5" />
+              </Link>
+            </Button>
+            {isClient && <NotificationsDropdown />}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src="/avatars/user.png" alt="User avatar" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarImage src="/images/avatar.png" alt="User" />
+                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
-                    <p className="text-xs leading-none text-muted-foreground">john@example.com</p>
-                  </div>
-                </DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem onClick={() => router.push("/dashboard/profile")}>

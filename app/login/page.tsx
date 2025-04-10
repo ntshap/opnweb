@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LockKeyhole, User } from "lucide-react"
-import { authApi } from "@/lib/api"
+import { authApi } from "@/lib/api-auth"
 import { NetworkStatus } from "@/components/ui/network-status"
 
 export default function LoginPage() {
@@ -39,19 +39,8 @@ export default function LoginPage() {
       // Log successful response
       console.log("Login successful, token received")
 
-      // Store the token
+      // Token is already stored by the auth API
       if (response && response.token) {
-        // Store in localStorage for client-side access
-        localStorage.setItem("token", response.token)
-        if (response.refreshToken) {
-          localStorage.setItem("refreshToken", response.refreshToken)
-        }
-
-        // Store in cookies for middleware
-        document.cookie = `token=${response.token};path=/;max-age=2592000;SameSite=Strict` // 30 days
-        if (response.refreshToken) {
-          document.cookie = `refreshToken=${response.refreshToken};path=/;max-age=2592000;SameSite=Strict` // 30 days
-        }
 
         // Redirect to dashboard
         router.push("/dashboard")

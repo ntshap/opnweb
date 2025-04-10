@@ -5,6 +5,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Providers } from "@/app/providers"
 import { RegisterServiceWorker } from "@/app/register-sw"
+import { AuthProvider } from "@/components/auth/auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,8 +29,10 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
-          <RegisterServiceWorker />
-          {children}
+          <AuthProvider>
+            <RegisterServiceWorker />
+            {children}
+          </AuthProvider>
         </Providers>
       </body>
     </html>
