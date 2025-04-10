@@ -101,11 +101,19 @@ export function FinanceForm({ finance, isEditing = false, onSuccess }: FinanceFo
       } else {
         // Create new finance record and handle document upload after creation
         createFinance.mutate(apiData, {
-          onSuccess: (newFinance) => {
+          onSuccess: (response) => {
             // If we have a file to upload and the finance record was created successfully
-            if (file && newFinance?.id) {
+            // The response might be different depending on the API implementation
+            // We need to safely extract the ID
+            const newFinanceId = response && typeof response === 'object' && 'id' in response
+              ? response.id
+              : typeof response === 'object' && response !== null && 'data' in response && typeof response.data === 'object' && response.data !== null && 'id' in response.data
+                ? response.data.id
+                : null;
+
+            if (file && newFinanceId) {
               uploadDocument.mutate({
-                financeId: newFinance.id,
+                financeId: newFinanceId,
                 file,
               })
             }

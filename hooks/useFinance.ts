@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { API_CONFIG } from '@/lib/config';
+import { Finance } from '@/lib/api';
 
 // This interface matches the transaction object in the API response
 export interface FinanceTransaction {
@@ -35,14 +34,47 @@ interface UpdateFinanceParams {
   data: FinanceData;
 }
 
+// Add the missing useFinance hook to fetch a single finance record
+export function useFinance(id: string | number) {
+  return useQuery<Finance>({
+    queryKey: ['finance', id],
+    queryFn: async () => {
+      console.log(`Fetching finance record with ID ${id}`);
+      // Use the financeApi from lib/api.ts to get the finance record
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        const financeRecord = await financeApi.getFinance(id);
+        console.log('Finance record response:', financeRecord);
+        return financeRecord;
+      } catch (error) {
+        console.error('Error fetching finance record:', error);
+        throw error;
+      }
+    },
+    staleTime: 30000,
+    retryDelay: (attemptIndex: number) => Math.min(
+      1000 * Math.pow(2, attemptIndex),
+      30000
+    )
+  });
+}
+
 export function useFinanceHistory() {
   return useQuery<FinanceHistoryResponse>({
     queryKey: ['finance-history'],
     queryFn: async () => {
-      console.log('Fetching finance history from:', `${API_CONFIG.BASE_URL}/finance/history`);
-      const response = await apiClient.get<FinanceHistoryResponse>('/finance/history');
-      console.log('Finance history response:', response);
-      return response;
+      console.log('Fetching finance history');
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        const historyResponse = await financeApi.getFinanceHistory();
+        console.log('Finance history response:', historyResponse);
+        return historyResponse;
+      } catch (error) {
+        console.error('Error fetching finance history:', error);
+        throw error;
+      }
     },
     staleTime: 30000,
     retryDelay: (attemptIndex: number) => Math.min(
@@ -53,34 +85,67 @@ export function useFinanceHistory() {
 }
 
 export function useFinanceMutations() {
-  const createFinance = useMutation<unknown, Error, FinanceData>({
-    mutationFn: (data: FinanceData) => {
+  const createFinance = useMutation<Finance, Error, FinanceData>({
+    mutationFn: async (data: FinanceData) => {
       console.log('Creating finance record:', data);
-      return apiClient.post('/finance/', data);
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        return await financeApi.createFinance(data);
+      } catch (error) {
+        console.error('Error creating finance record:', error);
+        throw error;
+      }
     }
   });
 
-  const updateFinance = useMutation<unknown, Error, UpdateFinanceParams>({
-    mutationFn: ({ id, data }: UpdateFinanceParams) => {
+  const updateFinance = useMutation<Finance, Error, UpdateFinanceParams>({
+    mutationFn: async ({ id, data }: UpdateFinanceParams) => {
       console.log(`Updating finance record ${id}:`, data);
-      return apiClient.put(`/finance/${id}`, data);
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        return await financeApi.updateFinance(id, data);
+      } catch (error) {
+        console.error('Error updating finance record:', error);
+        throw error;
+      }
     }
   });
 
-  const deleteFinance = useMutation<unknown, Error, number>({
-    mutationFn: (id: number) => {
+  const deleteFinance = useMutation<void, Error, number | string>({
+    mutationFn: async (id: number | string) => {
       console.log(`Deleting finance record ${id}`);
-      return apiClient.delete(`/finance/${id}`);
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        await financeApi.deleteFinance(id);
+      } catch (error) {
+        console.error('Error deleting finance record:', error);
+        throw error;
+      }
+    }
+  });
+
+  // Add uploadDocument mutation
+  const uploadDocument = useMutation<string, Error, { financeId: number | string, file: File }>({
+    mutationFn: async ({ financeId, file }: { financeId: number | string, file: File }) => {
+      console.log(`Uploading document for finance record ${financeId}`);
+      try {
+        // Import the financeApi directly to avoid circular dependencies
+        const { financeApi } = await import('@/lib/api');
+        return await financeApi.uploadFinanceDocument(financeId, file);
+      } catch (error) {
+        console.error('Error uploading document:', error);
+        throw error;
+      }
     }
   });
 
   return {
     createFinance,
     updateFinance,
-    deleteFinance
+    deleteFinance,
+    uploadDocument
   };
 }
-
-
-
-
