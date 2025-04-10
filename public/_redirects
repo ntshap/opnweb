@@ -1,0 +1,5 @@
+# Netlify redirects file
+# Handle client-side routing for Next.js
+
+# Redirect all paths to index.html with 200 status code
+/*    /index.html   200

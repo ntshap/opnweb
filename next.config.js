@@ -2,9 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    webpackBuildWorker: true,
-    parallelServerCompiles: true,
-    parallelServerBuildTraces: true,
+    // Disable experimental features that might cause issues
+    webpackBuildWorker: false,
+    parallelServerCompiles: false,
+    parallelServerBuildTraces: false,
   },
   images: {
     remotePatterns: [
@@ -14,8 +15,8 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-    // Enable unoptimized images for Netlify deployment
-    unoptimized: process.env.NETLIFY === 'true',
+    // Always use unoptimized images for Netlify
+    unoptimized: true,
   },
   typescript: {
     // !! WARN !!
@@ -29,8 +30,12 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // Output standalone build for better Netlify compatibility
-  output: 'standalone',
+  // Use export instead of standalone for Netlify
+  output: 'export',
+  // Disable font optimization
+  optimizeFonts: false,
+  // Disable trailing slash
+  trailingSlash: false,
 };
 
 module.exports = nextConfig;

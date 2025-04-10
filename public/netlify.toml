@@ -1,0 +1,8 @@
+# This file is copied to the output directory during build
+# It ensures proper routing for a Next.js app on Netlify
+
+# Handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

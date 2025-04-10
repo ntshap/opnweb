@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "build:netlify": "node netlify.js && next build",
+    "build:netlify": "node netlify-build.js",
+    "build:static": "next build && next export",
     "build:vercel": "next build --no-lint",
     "start": "next start -p 3000",
     "lint": "next lint"
