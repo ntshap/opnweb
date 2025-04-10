@@ -14,6 +14,8 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Enable unoptimized images for Netlify deployment
+    unoptimized: process.env.NETLIFY === 'true',
   },
   typescript: {
     // !! WARN !!
@@ -27,6 +29,8 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Output standalone build for better Netlify compatibility
+  output: 'standalone',
 };
 
 module.exports = nextConfig;

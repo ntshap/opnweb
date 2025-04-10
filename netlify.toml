@@ -1,0 +1,34 @@
+[build]
+  command = "npm run build:netlify"
+  publish = ".next"
+
+[build.environment]
+  NETLIFY = "true"
+  NODE_VERSION = "20"
+  NEXT_PUBLIC_API_URL = "https://backend-project-pemuda.onrender.com/api/v1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Handle SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+  conditions = {Role = ["anonymous"]}
+
+# Force trailing slash
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard/"
+  status = 301
+  force = true
+
+# Redirect to login if not authenticated
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/login"
+  status = 302
+  force = false
+  conditions = {Role = ["anonymous"]}

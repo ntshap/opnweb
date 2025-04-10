@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
+    "build:netlify": "node netlify.js && next build",
     "build:vercel": "next build --no-lint",
     "start": "next start -p 3000",
     "lint": "next lint"
@@ -91,6 +92,7 @@
     "zod": "latest"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.10.4",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",

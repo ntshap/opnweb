@@ -33,52 +33,32 @@ export function NetworkStatus() {
       setShowAlert(true) // Keep showing when offline
     }
 
-    // Function to check API connectivity
+    // Simple function to check if we can reach the API base URL
     const checkApiConnection = async () => {
       try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000)
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'https://backend-project-pemuda.onrender.com/api/v1'}/health`,
-          { signal: controller.signal }
-        )
-
-        clearTimeout(timeoutId)
-
-        if (!response.ok) {
-          console.log('API health check failed:', response.status)
-          if (isOnline) {
-            // We're online but API is unreachable
-            setApiConnected(false)
-            setShowAlert(true)
-          }
-        } else {
+        // Just check if we're online, don't make actual API calls
+        if (navigator.onLine) {
           setApiConnected(true)
-        }
-      } catch (error) {
-        console.log('API connection check failed:', error)
-        if (isOnline) {
-          // We're online but API is unreachable
+        } else {
           setApiConnected(false)
           setShowAlert(true)
         }
+      } catch (error) {
+        console.log('API connection check failed:', error)
       }
     }
 
-    // Check API connection initially and every 30 seconds
+    // Check API connection initially
     checkApiConnection()
-    const intervalId = setInterval(checkApiConnection, 30000)
 
     // Add event listeners
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    // Clean up event listeners and interval
+    // Clean up event listeners
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
-      clearInterval(intervalId)
     }
   }, [isOnline])
 
