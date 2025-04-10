@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { LockKeyhole, User } from "lucide-react"
 import { authApi } from "@/lib/api"
+import { NetworkStatus } from "@/components/ui/network-status"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,16 +25,42 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Explicitly remove any user data from localStorage for security
+      // Clear any existing tokens first
+      localStorage.removeItem("token")
+      localStorage.removeItem("refreshToken")
       localStorage.removeItem("user")
 
-      // Use the secure auth service
-      await authApi.login(username, password)
+      // Add logging to debug the request
+      console.log("Attempting login with:", { username })
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+      // Use the secure auth service with better error handling
+      const response = await authApi.login(username, password)
+
+      // Log successful response
+      console.log("Login successful, token received")
+
+      // Store the token
+      if (response && response.token) {
+        localStorage.setItem("token", response.token)
+        if (response.refreshToken) {
+          localStorage.setItem("refreshToken", response.refreshToken)
+        }
+
+        // Redirect to dashboard
+        router.push("/dashboard")
+      } else {
+        throw new Error("Invalid response from server")
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
+      console.error("Login error:", err)
+      // More specific error message
+      if (err instanceof Error) {
+        setError(err.message)
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        setError(String((err as any).message))
+      } else {
+        setError("Login failed. Please check your credentials and try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -41,6 +68,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-purple-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <NetworkStatus />
       {/* Background decoration */}
       <div className="absolute inset-0 z-0 opacity-40">
         <div className="absolute -left-4 -top-24 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-2xl animate-blob"></div>

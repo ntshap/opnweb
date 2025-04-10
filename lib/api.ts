@@ -1052,34 +1052,42 @@ export const authApi = {
       formData.append("password", password)
       formData.append("grant_type", "password")
 
-      const response = await apiClient.post<{ access_token: string; refresh_token: string }>(
-        '/auth/token',
-        formData.toString(),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      )
+      console.log("Sending login request to:", `${API_CONFIG.BASE_URL}/auth/token`)
 
-      // Store only the token securely, not username or password
-      setAuthToken(response.data.access_token)
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/token`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+      })
 
-      // Store refresh token in memory or in a secure HTTP-only cookie (if possible)
-      // For this implementation, we'll store it in localStorage but in a real app,
-      // consider more secure options like HTTP-only cookies
-      localStorage.setItem('refreshToken', response.data.refresh_token)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.detail || errorData.message || `Error ${response.status}: ${response.statusText}`
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+
+      // Store token securely
+      setAuthToken(data.access_token)
+      localStorage.setItem('refreshToken', data.refresh_token)
 
       // Explicitly remove any user data from localStorage for security
       localStorage.removeItem('user')
 
       return {
-        token: response.data.access_token,
-        refreshToken: response.data.refresh_token
+        token: data.access_token,
+        refreshToken: data.refresh_token
       }
     } catch (error) {
-      console.error('Login error:', error)
-      throw new Error(error instanceof Error ? error.message : 'Invalid credentials')
+      console.error('Login error details:', error)
+      if (error instanceof Error) {
+        throw error
+      } else {
+        throw new Error('Invalid credentials or server error')
+      }
     }
   },
 
